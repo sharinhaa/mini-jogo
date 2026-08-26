@@ -14,5 +14,7 @@ INTERFACE & ÁUDIO:
 1. sistemas de vidas -- o jogador inicia com 3 vidas, perdendo 1 a cada colisão ou tiro sofrido.
 2. interface(HUD) -- exibe a  quantidade de vidas, pontuação e tempo corrido na parte superior da tela.
 3. menu e screens -- menu principal, HUD dinâmico e tela de game over com transições em fade.
-4. áudio -- trilha sonora no estilo eletrônica. 
+4. áudio -- trilha sonora no estilo eletrônica.
+
+PLANOS DE TESTES: os mesmos contínuos em cada entrega focados em colisões, spawns, balanceamento do cooldown, entre outras etapas. 
 
