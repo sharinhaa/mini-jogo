@@ -12,6 +12,7 @@ amarelo_carro = (255, 215, 0)
 vermelho_carro = (220, 20, 60)
 verde_carro = (34, 139, 34)
 azul_carro = (30, 144, 255)
+castanho_caixa = (139, 69, 19)
 
 pygame.font.init()
 fonte_HUD = pygame.font.SysFont("Consolas", 20, bold= True)
