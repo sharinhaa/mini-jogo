@@ -26,7 +26,7 @@ todos_sprites.add(jogador)
 pontuacao = 0
 tempo_inicio = pygame.time.get_ticks()
 ultimo_spawn = pygame.time.get_ticks()
-intevalo_spwan = 1200
+intervalo_spawn = 1200
 velocidade_base = 4
 game_over = False 
 
@@ -64,25 +64,25 @@ def reiniciar_jogo():
     tempo_inicio = pygame.time.get_ticks()
 
     #LOOP PRINCIPAL
-    rodando = True
-    while rodando:
-        relogio.tick(fps)
-        agora = pygame.time.get_ticks()
+rodando = True
+while rodando:
+     relogio.tick(fps)
+     agora = pygame.time.get_ticks()
 
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                rodando = False
-            if game_over and evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_r:
-                    reiniciar_jogo()
+     for evento in pygame.event.get():
+         if evento.type == pygame.QUIT:
+             rodando = False
+         if game_over and evento.type == pygame.KEYDOWN:
+            if evento.key == pygame.K_r:
+                 reiniciar_jogo()
 
-        if not game_over:
-            tempo_decorrido = (agora - tempo_inicio) // 1000
-            if tempo_decorrido > 0 and tempo_decorrido % 30 ==0:
-                velocidade_base += 0.005
-                intervalo_spawn = max(400, intervalo_spawn - 0.05)
+     if not game_over:
+         tempo_decorrido = (agora - tempo_inicio) // 1000
+         if tempo_decorrido > 0 and tempo_decorrido % 30 ==0:
+             velocidade_base += 0.005
+             intervalo_spawn = max(400, intervalo_spawn - 0.05)
 
-            if agora - ultimo_spawn > intervalo_spawn:
+         if agora - ultimo_spawn > intervalo_spawn:
                 sorteio = random.random()
                 if sorteio <0.5:
                     obj = CarroInimigo(velocidade_base)
@@ -99,30 +99,29 @@ def reiniciar_jogo():
 
 
             #ATUALIZAÇÕES
-            jogador.update(todos_sprites, projeteis)
-            inimigos.update()
-            bombas.update()
-            caixas.update()
-            projeteis.update()
-            itens.update()
-
+         jogador.update(todos_sprites, projeteis)
+         inimigos.update()
+         bombas.update()
+         caixas.update()
+         projeteis.update()
+         itens.update()
 
         # COLISÕES
         # 1. Projétil destroi Carros Inimigos
-        for inimigo in pygame.sprite.groupcollide(inimigos, projeteis, True, True):
+     for inimigo in pygame.sprite.groupcollide(inimigos, projeteis, True, True):
             pontuacao += 100
 
         # 2. Projétil destroi Caixa (40% de chance de dropar Chave de Fenda)
-        colisoes_caixa = pygame.sprite.groupcollide(caixas, projeteis, True, True)
-        for caixa in colisoes_caixa:
+     colisoes_caixa = pygame.sprite.groupcollide(caixas, projeteis, True, True)
+     for caixa in colisoes_caixa:
             pontuacao += 50
             if random.random() < 0.4:
-                chave = COR_CHAVE_DE_FENDA(caixa.rect.centerx, caixa.rect.centery)
+                chave = chave(COR_CHAVE_DE_FENDA, caixa.rect.centerx, caixa.rect.centery)
                 todos_sprites.add(chave)
                 itens.add(chave)
 
          # 3. Jogador colide com Inimigos, Bombas ou Caixas
-        if (pygame.sprite.spritecollide(jogador, inimigos, True) or
+     if (pygame.sprite.spritecollide(jogador, inimigos, True) or
             pygame.sprite.spritecollide(jogador, bombas, True) or
             pygame.sprite.spritecollide(jogador, caixas, True)):
             jogador.vidas -= 1
@@ -130,23 +129,21 @@ def reiniciar_jogo():
                 game_over = True
 
         # 4. Jogador coleta Chave de Fenda
-        for item in pygame.sprite.spritecollide(jogador, itens, True):
+     for item in pygame.sprite.spritecollide(jogador, itens, True):
             jogador.vidas += 1
 
 
-    tela.fill(cor_fundo)
-    desenhar_pista()
-    todos_sprites.draw(tela)
-    desenhar_hud()
+     tela.fill(cor_fundo)
+     desenhar_pista()
+     todos_sprites.draw(tela)
+     desenhar_hud()
 
-    if game_over:
+     if game_over:
         txt_go = fonte_titulo.render("GAME OVER", True, VERMELHO_CARRO)
         txt_reiniciar = fonte_HUD.render("Pressione 'R' para Reiniciar", True, cor_texto)
         tela.blit(txt_go, (LARGURA_TELA // 2 - 110, ALTURA_TELA // 2 - 40))
         tela.blit(txt_reiniciar, (LARGURA_TELA // 2 - 150, ALTURA_TELA // 2 + 10))
 
-    pygame.display.flip()
+     pygame.display.flip()
 
 pygame.quit()
-sys.exit()
-

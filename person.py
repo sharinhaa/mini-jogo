@@ -51,10 +51,10 @@ class CarroInimigo(pygame.sprite.Sprite):
             cor = random.choice([VERDE_CARRO, VERMELHO_CARRO, AZUL_CARRO])
             self.image.fill(cor)
 
-            self.rect = self.image.rect()
+            self.rect = self.image.get_rect()
             self.rect.x = random.randint(160, LARGURA_TELA - 200)
             self.rect.y = random.randint(-100, -40)
-            self.velocidade = self.velocidade_base + random.randint(1, 2)
+            self.velocidade = velocidade_base + random.randint(1, 2)
 
         def update(self):
             self.rect.y += self.velocidade 
