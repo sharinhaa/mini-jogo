@@ -93,7 +93,7 @@ class CaixaMadeira(pygame.sprite.Sprite):
     def update(self):
         self.rect.y += self.velocidade
         if self.rect.top > ALTURA_TELA:
-            self.kill
+            self.kill()
 
 
 class Projatil(pygame.sprite.Sprite):
@@ -128,6 +128,3 @@ class ChavedeFenda(pygame.sprite.Sprite):
         self.rect.y += self.velocidade
         if self.rect.top > ALTURA_TELA:
             self.kill()
-
-
-

@@ -1,5 +1,6 @@
 import pygame
 import random
+import person, config
 import sys
 
 from config import LARGURA_TELA, ALTURA_TELA, VERDE_CARRO, VERMELHO_CARRO, AZUL_CARRO, AMARELO_CARRO, CASTANHO_CAIXA, CIANO_NEON, ROXO_NEON, fonte_HUD, fonte_titulo, cor_fundo, cor_texto, cor_tela, fps, COR_CHAVE_DE_FENDA
@@ -46,7 +47,7 @@ def desenhar_pista():
     pygame.draw.line(tela, ROXO_NEON, (LARGURA_TELA - 150, 0), (LARGURA_TELA - 150, ALTURA_TELA), 5)
 
 def reiniciar_jogo():
-    global game_over, pontuacao, velocidade_base, intevalo_spwan, tempo_inicio, jogador
+    global game_over, pontuacao, velocidade_base, intervalo_spawn, tempo_inicio, jogador
     game_over = False
     todos_sprites.empty()
     inimigos.empty()
@@ -106,31 +107,31 @@ while rodando:
          projeteis.update()
          itens.update()
 
-        # COLISÕES
-        # 1. Projétil destroi Carros Inimigos
-     for inimigo in pygame.sprite.groupcollide(inimigos, projeteis, True, True):
-            pontuacao += 100
+         # COLISÕES
+         # 1. Projétil destroi Carros Inimigos
+         for inimigo in pygame.sprite.groupcollide(inimigos, projeteis, True, True):
+             pontuacao += 100
 
-        # 2. Projétil destroi Caixa (40% de chance de dropar Chave de Fenda)
-     colisoes_caixa = pygame.sprite.groupcollide(caixas, projeteis, True, True)
-     for caixa in colisoes_caixa:
-            pontuacao += 50
-            if random.random() < 0.4:
-                chave = chave(COR_CHAVE_DE_FENDA, caixa.rect.centerx, caixa.rect.centery)
-                todos_sprites.add(chave)
-                itens.add(chave)
+         # 2. Projétil destroi Caixa (40% de chance de dropar Chave de Fenda)
+         colisoes_caixa = pygame.sprite.groupcollide(caixas, projeteis, True, True)
+         for caixa in colisoes_caixa:
+             pontuacao += 50
+             if random.random() < 0.4:
+                 chave = ChavedeFenda(caixa.rect.centerx, caixa.rect.centery)
+                 todos_sprites.add(chave)
+                 itens.add(chave)
 
          # 3. Jogador colide com Inimigos, Bombas ou Caixas
-     if (pygame.sprite.spritecollide(jogador, inimigos, True) or
-            pygame.sprite.spritecollide(jogador, bombas, True) or
-            pygame.sprite.spritecollide(jogador, caixas, True)):
-            jogador.vidas -= 1
-            if jogador.vidas <= 0:
-                game_over = True
+         if (pygame.sprite.spritecollide(jogador, inimigos, True) or
+                 pygame.sprite.spritecollide(jogador, bombas, True) or
+                 pygame.sprite.spritecollide(jogador, caixas, True)):
+             jogador.vidas -= 1
+             if jogador.vidas <= 0:
+                 game_over = True
 
-        # 4. Jogador coleta Chave de Fenda
-     for item in pygame.sprite.spritecollide(jogador, itens, True):
-            jogador.vidas += 1
+         # 4. Jogador coleta Chave de Fenda
+         for item in pygame.sprite.spritecollide(jogador, itens, True):
+             jogador.vidas += 1
 
 
      tela.fill(cor_fundo)
