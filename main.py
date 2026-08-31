@@ -13,6 +13,9 @@ tela = pygame.display.set_mode ((LARGURA_TELA, ALTURA_TELA))
 pygame.display.set_caption("Retro Chase: Neon Fury")
 relogio = pygame.time.Clock()
 
+fundo = pygame.image.load("assets/imagens/background.png").convert()
+fundo = pygame.transform.scale(fundo, (LARGURA_TELA, ALTURA_TELA))
+
 #GRUPO DE SPRITES
 todos_sprites = pygame.sprite.Group()
 inimigos = pygame.sprite.Group()
@@ -40,11 +43,6 @@ def desenhar_hud():
     tela.blit(texto_vidas, (20, 20))
     tela.blit(texto_score, (20, 50))
     tela.blit(texto_tempo, (20, 80))
-
-def desenhar_pista():
-    pygame.draw.rect(tela, cor_tela, (150, 0, LARGURA_TELA - 300, ALTURA_TELA))
-    pygame.draw.line(tela, ROXO_NEON, (150, 0), (150, ALTURA_TELA), 5)
-    pygame.draw.line(tela, ROXO_NEON, (LARGURA_TELA - 150, 0), (LARGURA_TELA - 150, ALTURA_TELA), 5)
 
 def reiniciar_jogo():
     global game_over, pontuacao, velocidade_base, intervalo_spawn, tempo_inicio, jogador
@@ -108,11 +106,11 @@ while rodando:
          itens.update()
 
          # COLISÕES
-         # 1. Projétil destroi Carros Inimigos
+         # 1- Projétil destroi Carros Inimigos
          for inimigo in pygame.sprite.groupcollide(inimigos, projeteis, True, True):
              pontuacao += 100
 
-         # 2. Projétil destroi Caixa (40% de chance de dropar Chave de Fenda)
+         # 2- Projétil destroi Caixa (40% de chance de dropar Chave de Fenda)
          colisoes_caixa = pygame.sprite.groupcollide(caixas, projeteis, True, True)
          for caixa in colisoes_caixa:
              pontuacao += 50
@@ -121,7 +119,7 @@ while rodando:
                  todos_sprites.add(chave)
                  itens.add(chave)
 
-         # 3. Jogador colide com Inimigos, Bombas ou Caixas
+         # 3- Jogador colide com Inimigos, Bombas ou Caixas
          if (pygame.sprite.spritecollide(jogador, inimigos, True) or
                  pygame.sprite.spritecollide(jogador, bombas, True) or
                  pygame.sprite.spritecollide(jogador, caixas, True)):
@@ -129,13 +127,12 @@ while rodando:
              if jogador.vidas <= 0:
                  game_over = True
 
-         # 4. Jogador coleta Chave de Fenda
+         # 4- Jogador coleta Chave de Fenda
          for item in pygame.sprite.spritecollide(jogador, itens, True):
              jogador.vidas += 1
 
 
-     tela.fill(cor_fundo)
-     desenhar_pista()
+     tela.blit(fundo, (0, 0))
      todos_sprites.draw(tela)
      desenhar_hud()
 
