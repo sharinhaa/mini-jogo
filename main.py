@@ -3,7 +3,7 @@ import random
 import person, config
 import sys
 
-from config import LARGURA_TELA, ALTURA_TELA, VERDE_CARRO, VERMELHO_CARRO, AZUL_CARRO, AMARELO_CARRO, CASTANHO_CAIXA, CIANO_NEON, ROXO_NEON, fonte_HUD, fonte_titulo, cor_fundo, cor_texto, cor_tela, fps, COR_CHAVE_DE_FENDA
+from config import LARGURA_TELA, ALTURA_TELA, VERDE_CARRO, VERMELHO_CARRO, AZUL_CARRO, AMARELO_CARRO, CASTANHO_CAIXA, CIANO_NEON, ROXO_NEON, fonte_HUD, fonte_titulo, cor_fundo, cor_texto, cor_tela, fps, COR_CHAVE_DE_FENDA, COR_ESCUDO, AMARELO_FAISCA
 
 from person import Jogador, CarroInimigo, ObstaculoBomba, CaixaMadeira, ChavedeFenda
 
@@ -145,3 +145,4 @@ while rodando:
      pygame.display.flip()
 
 pygame.quit()
+sys.exit()

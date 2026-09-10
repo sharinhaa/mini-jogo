@@ -19,6 +19,8 @@ ROXO_NEON = (180, 0, 255)
 CIANO_NEON = (0, 255, 255)
 CASTANHO_CAIXA = (139, 69, 19)
 COR_CHAVE_DE_FENDA = (192, 192, 192)
+COR_ESCUDO = (0, 191, 255)
+AMARELO_FAISCA = (255, 255, 100)
 
 fonte_HUD = pygame.font.SysFont("Consolas", 20, bold= True)
 fonte_titulo = pygame.font.SysFont("Consolas", 40, bold= True)
