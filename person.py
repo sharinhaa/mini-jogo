@@ -1,33 +1,22 @@
 import pygame
 import random
 import math
-from config import AMARELO_CARRO,  VERMELHO_CARRO, VERDE_CARRO, AZUL_CARRO, LARGURA_TELA, ALTURA_TELA, CASTANHO_CAIXA, COR_ESCUDO, AMARELO_FAISCA
+from config import LARGURA_TELA, ALTURA_TELA
 
 
 class Jogador (pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((40, 60))
-        self.image.fill(AMARELO_CARRO)
-
-        pygame.draw.rect(self.image, (0, 0, 0), (16, 0, 8, 60))
-
+        imagem_original = pygame.image.load("assets/imagens/carro amarelo.png").convert_alpha()
+        self.image = pygame.transform.scale(imagem_original, (40, 70))
         self.rect = self.image.get_rect()
         self.rect.centerx = LARGURA_TELA // 2
         self.rect.bottom = ALTURA_TELA - 20
-
-        self.velocidade = 7
+        self.velocidade = 5
         self.vidas = 3
         self.cooldown_tiro = 250
         self.ultimo_tiro = pygame.time.get_ticks()
 
-        self.escudo_ativo = False
-        self.tempo_escudo = 0
-        self.duracao_escudo = 5000
-
-    def ativar_escudo(self):
-        self.escudo_ativo = True
-        self.tempo_escudo = pygame.time.get_ticks()
 
     def update(self, todos_sprites, projeteis):
         agora = pygame.time.get_ticks()
@@ -38,15 +27,14 @@ class Jogador (pygame.sprite.Sprite):
                 self.escudo_ativo = False
                 self.image = self.image_base.copy()
             else:
-                self.imgae = self.image_base.copy()
-                pygame.draw.rect(self.image, COR_ESCUDO, (0, 0, 40, 60), 4)
+                self.image = self.image_base.copy()
 
 
         teclas = pygame.key.get_pressed()
 #movimentacao lateral travada dentro da pista
-        if teclas[pygame.K_LEFT] and self.rect.left > 150:
+        if teclas[pygame.K_LEFT] and self.rect.left > 0:
             self.rect.x -= self.velocidade
-        if teclas[pygame.K_RIGHT] and self.rect.right < LARGURA_TELA - 150:
+        if teclas[pygame.K_RIGHT] and self.rect.right < LARGURA_TELA:
             self.rect.x += self.velocidade
 
         if teclas[pygame.K_SPACE]:
@@ -65,19 +53,19 @@ class Jogador (pygame.sprite.Sprite):
 class CarroInimigo(pygame.sprite.Sprite):
         def __init__(self, velocidade_base):
             super().__init__()
-            self.image = pygame.Surface((40, 60))
+            opcoes_carro = ["carro_vermelho.png", "Carro_azul.png", "carro_verde.png"]
+            imagem_escolhida = random.choice(opcoes_carro)
 
-            #sorteia exclusivamente entre vermelho, verde e azul
-            cor = random.choice([VERDE_CARRO, VERMELHO_CARRO, AZUL_CARRO])
-            self.image.fill(cor)
+            imagem_original = pygame.image.load(f"assets/imagens/{imagem_escolhida}").convert_alpha()
+            self.image = pygame.transform.scale(imagem_original, (40, 70))
 
             self.rect = self.image.get_rect()
-            self.rect.x = random.randint(160, LARGURA_TELA - 200)
-            self.rect.y = random.randint(-100, -40)
+            self.rect.x = random.randint(0, LARGURA_TELA - self.rect.width)
+            self.rect.y = random.randint(-150, -70)
             self.velocidade_y = velocidade_base + random.uniform(0.5, 2.0)
             #movimento em zig-zag
             self.faz_zig_zag = random.random() < 0.30
-            self.angulo = 0
+            self.angulo = random.uniform(0, 360)
 
         def update(self):
             self.rect.y += self.velocidade_y
@@ -93,13 +81,11 @@ class CarroInimigo(pygame.sprite.Sprite):
 class ObstaculoBomba(pygame.sprite.Sprite):
     def __init__(self, velocidade_base):
         super().__init__()
-        self.image = pygame.Surface((30, 30))
-        self.image.fill(VERMELHO_CARRO)
-        pygame.draw.rect(self.image, (0, 0, 0), (5, 10, 20, 10)) #relogio digital 
-
+        imagem_original = pygame.image.load("assets/imagens/tnt_minijogo.png").convert_alpha()
+        self.image = pygame.transform.scale(imagem_original, (40, 40))
         self.rect = self.image.get_rect()
-        self.rect.x = random.randint(160, LARGURA_TELA - 190)
-        self.rect.y = random.randint(-80, -30)
+        self.rect.x = random.randint(0, LARGURA_TELA - self.rect.width)
+        self.rect.y = random.randint(-100, -40)
         self.velocidade = velocidade_base
 
     def update(self):
@@ -110,12 +96,10 @@ class ObstaculoBomba(pygame.sprite.Sprite):
 class CaixaMadeira(pygame.sprite.Sprite):
     def __init__(self, velocidade_base):
         super().__init__()
-        self.image = pygame.Surface((35, 35))
-        self.image.fill(CASTANHO_CAIXA)
-        pygame.draw.rect(self.image, (60, 30, 10), (0, 0, 35, 35), 3)
-
+        imagem_original = pygame.image.load("assets/imagens/caixa_suprice.png").convert_alpha()
+        self.image = pygame.transform.scale(imagem_original, (40, 40))
         self.rect = self.image.get_rect()
-        self.rect.x = random.randint(160, LARGURA_TELA - 195)
+        self.rect.x = random.randint(0, LARGURA_TELA - self.rect.width)
         self.rect.y = random.randint(-100, -40)
         self.velocidade = velocidade_base
 
@@ -146,7 +130,6 @@ class ChavedeFenda(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.Surface((15, 25))
         self.image.fill((192, 192, 192))
-        pygame.draw.rect(self.image, AMARELO_CARRO, (0, 12, 15, 13))
 
         self.rect = self.image.get_rect()
         self.rect.centerx = x
