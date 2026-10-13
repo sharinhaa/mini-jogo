@@ -3,18 +3,41 @@ import random
 import person, config
 import sys
 
-from config import LARGURA_TELA, ALTURA_TELA, VERDE_CARRO, VERMELHO_CARRO, AZUL_CARRO, AMARELO_CARRO, CASTANHO_CAIXA, CIANO_NEON, ROXO_NEON, fonte_HUD, fonte_titulo, cor_fundo, cor_texto, cor_tela, fps, COR_CHAVE_DE_FENDA, COR_ESCUDO, AMARELO_FAISCA
-
-from person import Jogador, CarroInimigo, ObstaculoBomba, CaixaMadeira, ChavedeFenda
+from config import LARGURA_TELA, ALTURA_TELA, VERMELHO_CARRO, CIANO_NEON, ROXO_NEON, fonte_HUD, fonte_titulo, cor_fundo, cor_texto,  fps
+from person import Jogador, CarroInimigo, ObstaculoBomba, CaixaMadeira, ChavedeFenda, ParticulaExplosao
 
 pygame.init()
+pygame.mixer.init()
 
 tela = pygame.display.set_mode ((LARGURA_TELA, ALTURA_TELA))
 pygame.display.set_caption("Retro Chase: Neon Fury")
 relogio = pygame.time.Clock()
 
-fundo = pygame.image.load("assets/imagens/background.png").convert()
-fundo = pygame.transform.scale(fundo, (LARGURA_TELA, ALTURA_TELA))
+try:
+    fundo = pygame.image.load("assets/imagens/background.png").convert()
+    fundo = pygame.transform.scale(fundo, (LARGURA_TELA, ALTURA_TELA))
+except Exception:
+    fundo = pygame.Surface((LARGURA_TELA, ALTURA_TELA))
+    fundo.fill(cor_fundo)
+
+def carregar_som(caminho):
+    try:
+        return pygame.mixer.Sound(caminho)
+    except Exception:
+        return None
+
+som_tiro = carregar_som("assets/sons/tiro.wav")
+som_explosao = carregar_som("assets/sons/explosao.wav")
+som_item = carregar_som("assets/sons/item.wav")
+
+# TENTATIVA DE INICIAR TRILHA DE FUNDO
+try:
+    pygame.mixer.music.load("assets/sons/musica.mp3")
+    pygame.mixer.music.set_volume(0.4)
+    pygame.mixer.music.play(-1)  # Loop infinito
+except Exception:
+    pass
+
 
 #GRUPO DE SPRITES
 todos_sprites = pygame.sprite.Group()
@@ -34,6 +57,11 @@ intervalo_spawn = 1200
 velocidade_base = 4
 game_over = False 
 
+def criar_explosao(x, y):
+    for _ in range(10):
+        p = ParticulaExplosao(x, y)
+        todos_sprites.add(p)
+
 def desenhar_hud():
     texto_vidas = fonte_HUD.render(f"VIDAS: {jogador.vidas}", True, CIANO_NEON)
     texto_score = fonte_HUD.render(f"PONTOS: {pontuacao}", True, ROXO_NEON)
@@ -47,6 +75,7 @@ def desenhar_hud():
 def reiniciar_jogo():
     global game_over, pontuacao, velocidade_base, intervalo_spawn, tempo_inicio, jogador
     game_over = False
+
     todos_sprites.empty()
     inimigos.empty()
     bombas.empty()
@@ -56,11 +85,14 @@ def reiniciar_jogo():
 
     jogador = Jogador()
     todos_sprites.add(jogador)
-    todos_sprites.add(jogador)
+    
     pontuacao = 0
     velocidade_base = 4
     intervalo_spawn = 1200
     tempo_inicio = pygame.time.get_ticks()
+
+    if pygame.mixer.music.get_busy():
+        pygame.mixer.music.rewind()
 
     #LOOP PRINCIPAL
 rodando = True
@@ -77,16 +109,16 @@ while rodando:
 
      if not game_over:
          tempo_decorrido = (agora - tempo_inicio) // 1000
-         if tempo_decorrido > 0 and tempo_decorrido % 30 ==0:
-             velocidade_base += 0.005
-             intervalo_spawn = max(400, intervalo_spawn - 0.05)
+         if tempo_decorrido > 0 and tempo_decorrido % 30 == 0:
+             velocidade_base += 0.003
+             intervalo_spawn = max(350, intervalo_spawn - 0.03)
 
          if agora - ultimo_spawn > intervalo_spawn:
                 sorteio = random.random()
-                if sorteio <0.5:
+                if sorteio <0.50:
                     obj = CarroInimigo(velocidade_base)
                     inimigos.add(obj)
-                elif sorteio < 0.8:
+                elif sorteio < 0.78:
                     obj = CaixaMadeira(velocidade_base)
                     caixas.add(obj)
                 else:
@@ -98,7 +130,7 @@ while rodando:
 
 
             #ATUALIZAÇÕES
-         jogador.update(todos_sprites, projeteis)
+         jogador.update(todos_sprites, projeteis, som_tiro)
          inimigos.update()
          bombas.update()
          caixas.update()
@@ -109,12 +141,19 @@ while rodando:
          # 1- Projétil destroi Carros Inimigos
          for inimigo in pygame.sprite.groupcollide(inimigos, projeteis, True, True):
              pontuacao += 100
+             criar_explosao(inimigo.rect.centerx, inimigo.rect.centery)
+             if som_explosao:
+                som_explosao.play()
 
          # 2- Projétil destroi Caixa (40% de chance de dropar Chave de Fenda)
          colisoes_caixa = pygame.sprite.groupcollide(caixas, projeteis, True, True)
          for caixa in colisoes_caixa:
              pontuacao += 50
-             if random.random() < 0.4:
+             criar_explosao(caixa.rect.centerx, caixa.rect.centery)
+             if som_explosao:
+                som_explosao.play()
+
+             if random.random() < 0.40:
                  chave = ChavedeFenda(caixa.rect.centerx, caixa.rect.centery)
                  todos_sprites.add(chave)
                  itens.add(chave)
@@ -122,14 +161,21 @@ while rodando:
          # 3- Jogador colide com Inimigos, Bombas ou Caixas
          if (pygame.sprite.spritecollide(jogador, inimigos, True) or
                  pygame.sprite.spritecollide(jogador, bombas, True) or
-                 pygame.sprite.spritecollide(jogador, caixas, True)):
+                 pygame.sprite.spritecollide(jogador, caixas, True)
+         ):
              jogador.vidas -= 1
+             criar_explosao(jogador.rect.centerx, jogador.rect.centery)
+             if som_explosao:
+                som_explosao.play()
+
              if jogador.vidas <= 0:
                  game_over = True
 
          # 4- Jogador coleta Chave de Fenda
          for item in pygame.sprite.spritecollide(jogador, itens, True):
              jogador.vidas += 1
+             if som_item:
+                 som_item.play()
 
 
      tela.blit(fundo, (0, 0))
