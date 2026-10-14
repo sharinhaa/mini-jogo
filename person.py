@@ -1,10 +1,14 @@
 import pygame
 import random
 import math
-from config import LARGURA_TELA, ALTURA_TELA, AMARELO_CARRO, VERMELHO_CARRO, CIANO_NEON
 
+from config import (
+    LARGURA_TELA, ALTURA_TELA, 
+    PISTA_ESQUERDA, PISTA_DIREITA,
+    AMARELO_CARRO, VERMELHO_CARRO, CIANO_NEON
+)
 
-class Jogador (pygame.sprite.Sprite):
+class Jogador(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         try:
@@ -13,75 +17,76 @@ class Jogador (pygame.sprite.Sprite):
         except Exception:
             self.image = pygame.Surface((40, 70))
             self.image.fill(AMARELO_CARRO)
-     
 
         self.rect = self.image.get_rect()
         self.rect.centerx = LARGURA_TELA // 2
         self.rect.bottom = ALTURA_TELA - 20
         self.velocidade = 6
         self.vidas = 3
-    
-        self.cooldown_tiro = 250
+        
+        # Cooldown de disparo (em milissegundos)
+        self.cooldown_tiro = 220
         self.ultimo_tiro = pygame.time.get_ticks()
-
 
     def update(self, todos_sprites, projeteis, som_tiro=None):
         teclas = pygame.key.get_pressed()
-#movimentacao lateral travada dentro da pista
-        if teclas[pygame.K_LEFT] and self.rect.left > 150:
+        
+        # Movimentação restrita à pista de asfalto
+        if teclas[pygame.K_LEFT] and self.rect.left > PISTA_ESQUERDA:
             self.rect.x -= self.velocidade
-        if teclas[pygame.K_RIGHT] and self.rect.right < LARGURA_TELA - 150:
+        if teclas[pygame.K_RIGHT] and self.rect.right < PISTA_DIREITA:
             self.rect.x += self.velocidade
 
         if teclas[pygame.K_SPACE]:
             self.atirar(todos_sprites, projeteis, som_tiro)
 
-
     def atirar(self, todos_sprites, projeteis, som_tiro=None):
         agora = pygame.time.get_ticks()
         if agora - self.ultimo_tiro >= self.cooldown_tiro:
             self.ultimo_tiro = agora
-            #disparo vindo das laterais do carro
-            projatil_esq = Projatil(self.rect.left, self.rect.top)
-            projatil_dir = Projatil(self.rect.right - 6, self.rect.top)
-            todos_sprites.add(projatil_esq, projatil_dir)
-            projeteis.add(projatil_esq, projatil_dir)
-
+            
+            p_esq = Projetil(self.rect.left + 5, self.rect.top)
+            p_dir = Projetil(self.rect.right - 11, self.rect.top)
+            
+            todos_sprites.add(p_esq, p_dir)
+            projeteis.add(p_esq, p_dir)
+            
             if som_tiro:
                 som_tiro.play()
 
+
 class CarroInimigo(pygame.sprite.Sprite):
-        def __init__(self, velocidade_base):
-            super().__init__()
-            opcoes_carro = ["carro vermelho.png", "Carro azul.png", "carro verde.png"]
-            imagem_escolhida = random.choice(opcoes_carro)
+    def __init__(self, velocidade_base):
+        super().__init__()
+        opcoes_carro = ["carro vermelho.png", "Carro azul.png", "carro verde.png"]
+        imagem_escolhida = random.choice(opcoes_carro)
 
-            try:
-                img = pygame.image.load(f"assets/imagens/{imagem_escolhida}").convert_alpha()
-                self.image = pygame.transform.scale(img, (40, 70))
-            except Exception:
-                self.image = pygame.Surface((40, 70))
-                self.image.fill(VERMELHO_CARRO)
+        try:
+            img = pygame.image.load(f"assets/imagens/{imagem_escolhida}").convert_alpha()
+            self.image = pygame.transform.scale(img, (40, 70))
+        except Exception:
+            self.image = pygame.Surface((40, 70))
+            self.image.fill(VERMELHO_CARRO)
 
-            self.rect = self.image.get_rect()
-            self.rect.x = random.randint(160, LARGURA_TELA - 200)
-            self.rect.y = random.randint(-150, -70)
-            self.velocidade_y = velocidade_base + random.uniform(0.5, 2.0)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(PISTA_ESQUERDA, PISTA_DIREITA - self.rect.width)
+        self.rect.y = random.randint(-150, -70)
+        self.velocidade_y = velocidade_base + random.uniform(0.5, 2.0)
+        
+        self.faz_zig_zag = random.random() < 0.30
+        self.angulo = random.uniform(0, 360)
 
-            #movimento em zig-zag
-            self.faz_zig_zag = random.random() < 0.35
-            self.angulo = random.uniform(0, 360)
+    def update(self):
+        self.rect.y += self.velocidade_y
 
-        def update(self):
-            self.rect.y += self.velocidade_y
+        if self.faz_zig_zag:
+            self.angulo += 0.08
+            self.rect.x += math.sin(self.angulo) * 2
+            self.rect.x = max(PISTA_ESQUERDA, min(PISTA_DIREITA - self.rect.width, self.rect.x))
 
-            if self.faz_zig_zag:
-                self.angulo += 0.08
-                self.rect.x += math.sin(self.angulo) * 2.5
-                self.rect.x = max(155, min(LARGURA_TELA - 195, self.rect.x))
+        if self.rect.top > ALTURA_TELA:
+            self.kill()
 
-            if self.rect.top > ALTURA_TELA:
-                self.kill()
 
 class ObstaculoBomba(pygame.sprite.Sprite):
     def __init__(self, velocidade_base):
@@ -94,14 +99,15 @@ class ObstaculoBomba(pygame.sprite.Sprite):
             self.image.fill(VERMELHO_CARRO)
 
         self.rect = self.image.get_rect()
-        self.rect.x = random.randint(160, LARGURA_TELA - 195)
+        self.rect.x = random.randint(PISTA_ESQUERDA, PISTA_DIREITA - self.rect.width)
         self.rect.y = random.randint(-100, -40)
         self.velocidade = velocidade_base
 
     def update(self):
-        self.rect.y += self.velocidade 
+        self.rect.y += self.velocidade
         if self.rect.top > ALTURA_TELA:
             self.kill()
+
 
 class CaixaMadeira(pygame.sprite.Sprite):
     def __init__(self, velocidade_base):
@@ -114,7 +120,7 @@ class CaixaMadeira(pygame.sprite.Sprite):
             self.image.fill((139, 69, 19))
 
         self.rect = self.image.get_rect()
-        self.rect.x = random.randint(160, LARGURA_TELA - 195)
+        self.rect.x = random.randint(PISTA_ESQUERDA, PISTA_DIREITA - self.rect.width)
         self.rect.y = random.randint(-100, -40)
         self.velocidade = velocidade_base
 
@@ -124,10 +130,10 @@ class CaixaMadeira(pygame.sprite.Sprite):
             self.kill()
 
 
-class Projatil(pygame.sprite.Sprite):
+class Projetil(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.Surface((6, 16))
+        self.image = pygame.Surface((6, 14))
         self.image.fill(CIANO_NEON)
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -156,22 +162,19 @@ class ChavedeFenda(pygame.sprite.Sprite):
         if self.rect.top > ALTURA_TELA:
             self.kill()
 
-            
+
 class ParticulaExplosao(pygame.sprite.Sprite):
-    """ Efeito visual de explosão ao destruir alvos """
     def __init__(self, x, y):
         super().__init__()
         tamanho = random.randint(4, 8)
         self.image = pygame.Surface((tamanho, tamanho))
         self.image.fill(random.choice([VERMELHO_CARRO, AMARELO_CARRO, (255, 140, 0)]))
-        
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = y
-        
         self.vel_x = random.uniform(-4, 4)
         self.vel_y = random.uniform(-4, 4)
-        self.tempo_vida = 18  # frames
+        self.tempo_vida = 18
 
     def update(self):
         self.rect.x += self.vel_x
