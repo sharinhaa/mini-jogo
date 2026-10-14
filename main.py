@@ -47,7 +47,8 @@ except Exception:
 def carregar_som(caminho):
     try:
         return pygame.mixer.Sound(caminho)
-    except Exception:
+    except Exception as e:
+        print(f"Aviso: Não foi possivel carregar {caminho}: {e}")
         return None
 
 som_tiro = carregar_som("assets/sons/tiro.wav")
@@ -58,8 +59,8 @@ try:
     sound_musica = pygame.mixer.Sound("assets/sons/musica.wav")
     sound_musica.set_volume(0.3)
     sound_musica.play(-1)
-except Exception:
-    pass
+except Exception as e:
+    print("Aviso: Música de fundo não encontrada.")
 
 # ESTADOS DO JOGO: 'MENU', 'PLAYING', 'CREDITS', 'GAMEOVER'
 estado_jogo = 'MENU'
