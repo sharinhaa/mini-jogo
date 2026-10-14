@@ -8,15 +8,28 @@ from config import (
     AMARELO_CARRO, VERMELHO_CARRO, CIANO_NEON
 )
 
+def carregar_e_dimensionar_carro(caminho_imagem, largura_desejada=50, cor_fallback=AMARELO_CARRO):
+    """Carrega uma imagem e redimensiona mantendo a proporção original para não ficar 'fina'."""
+    try:
+        img_orig = pygame.image.load(caminho_imagem).convert_alpha()
+        largura_orig, altura_orig = img_orig.get_size()
+        
+        # Mantém a proporção do aspecto (Aspect Ratio)
+        proporcao = largura_desejada / float(largura_orig)
+        altura_desejada = int(altura_orig * proporcao)
+        
+        return pygame.transform.scale(img_orig, (largura_desejada, altura_desejada))
+    except Exception:
+        surface = pygame.Surface((largura_desejada, 80))
+        surface.fill(cor_fallback)
+        return surface
+
+
 class Jogador(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        try:
-            img = pygame.image.load("assets/imagens/carro amarelo.png").convert_alpha()
-            self.image = pygame.transform.scale(img, (40, 70))
-        except Exception:
-            self.image = pygame.Surface((40, 70))
-            self.image.fill(AMARELO_CARRO)
+        # Carrega a imagem ajustando a proporção (largura = 50px)
+        self.image = carregar_e_dimensionar_carro("assets/imagens/carro amarelo.png", largura_desejada=50, cor_fallback=AMARELO_CARRO)
 
         self.rect = self.image.get_rect()
         self.rect.centerx = LARGURA_TELA // 2
@@ -31,12 +44,19 @@ class Jogador(pygame.sprite.Sprite):
     def update(self, todos_sprites, projeteis, som_tiro=None):
         teclas = pygame.key.get_pressed()
         
-        # Movimentação restrita à pista de asfalto
-        if teclas[pygame.K_LEFT] and self.rect.left > PISTA_ESQUERDA:
+        # --- MOVIMENTAÇÃO LATERAL (Esquerda / Direita) ---
+        if (teclas[pygame.K_LEFT] or teclas[pygame.K_a]) and self.rect.left > PISTA_ESQUERDA:
             self.rect.x -= self.velocidade
-        if teclas[pygame.K_RIGHT] and self.rect.right < PISTA_DIREITA:
+        if (teclas[pygame.K_RIGHT] or teclas[pygame.K_d]) and self.rect.right < PISTA_DIREITA:
             self.rect.x += self.velocidade
 
+        # --- MOVIMENTAÇÃO VERTICAL (Frente / Trás) ---
+        if (teclas[pygame.K_UP] or teclas[pygame.K_w]) and self.rect.top > ALTURA_TELA // 3:
+            self.rect.y -= self.velocidade
+        if (teclas[pygame.K_DOWN] or teclas[pygame.K_s]) and self.rect.bottom < ALTURA_TELA - 10:
+            self.rect.y += self.velocidade
+
+        # Disparo
         if teclas[pygame.K_SPACE]:
             self.atirar(todos_sprites, projeteis, som_tiro)
 
@@ -61,12 +81,12 @@ class CarroInimigo(pygame.sprite.Sprite):
         opcoes_carro = ["carro vermelho.png", "Carro azul.png", "carro verde.png"]
         imagem_escolhida = random.choice(opcoes_carro)
 
-        try:
-            img = pygame.image.load(f"assets/imagens/{imagem_escolhida}").convert_alpha()
-            self.image = pygame.transform.scale(img, (40, 70))
-        except Exception:
-            self.image = pygame.Surface((40, 70))
-            self.image.fill(VERMELHO_CARRO)
+        # Carrega com proporção preservada
+        self.image = carregar_e_dimensionar_carro(
+            f"assets/imagens/{imagem_escolhida}", 
+            largura_desejada=50, 
+            cor_fallback=VERMELHO_CARRO
+        )
 
         self.rect = self.image.get_rect()
         self.rect.x = random.randint(PISTA_ESQUERDA, PISTA_DIREITA - self.rect.width)
