@@ -2,6 +2,7 @@ import pygame
 import random
 import sys
 
+
 from config import (
     LARGURA_TELA, ALTURA_TELA, VERMELHO_CARRO, AMARELO_CARRO, CIANO_NEON, 
     ROXO_NEON, fonte_HUD, fonte_titulo, cor_fundo, cor_texto, fps
@@ -46,21 +47,28 @@ except Exception:
 # CARREGAMENTO DOS SONS
 def carregar_som(caminho):
     try:
-        return pygame.mixer.Sound(caminho)
-    except Exception as e:
-        print(f"Aviso: Não foi possivel carregar {caminho}: {e}")
+       s = pygame.mixer.Sound(caminho)
+       return s
+    except Exception:
         return None
 
 som_tiro = carregar_som("assets/sons/tiro.wav")
 som_explosao = carregar_som("assets/sons/explosao.wav")
 som_item = carregar_som("assets/sons/item.wav")
 
+if som_tiro:
+    som_tiro.set_volume(0.3)
+if som_explosao:
+    som_explosao.set_volume(0.4)
+if som_item:
+    som_item.set_volume(0.5)
+
 try:
     sound_musica = pygame.mixer.Sound("assets/sons/musica.wav")
-    sound_musica.set_volume(0.3)
+    sound_musica.set_volume(0.25)
     sound_musica.play(-1)
 except Exception as e:
-    print("Aviso: Música de fundo não encontrada.")
+    print("Aviso: Música de fundo não encontrada.", e)
 
 # ESTADOS DO JOGO: 'MENU', 'PLAYING', 'CREDITS', 'GAMEOVER'
 estado_jogo = 'MENU'
